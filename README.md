@@ -4,6 +4,9 @@ A 3D first-person shooter set in an abandoned 90s shopping mall overrun by alien
 
 ![Dead Mall Arena screenshot](<Dead Mall Arena - screenshot.png>)
 
+![Deployed in the dead mall](screenshots/gameplay.png)
+*Deployed in the dead mall*
+
 ## What's in it
 
 - Single-player against AI bots, or multiplayer with friends using a party code, including a mode that needs no server at all
