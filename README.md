@@ -7,6 +7,14 @@ A 3D first-person shooter set in an abandoned 90s shopping mall overrun by alien
 ![Deployed in the dead mall](screenshots/gameplay.png)
 *Deployed in the dead mall*
 
+## New: LAN Edition
+
+**[Dead Mall Arena LAN Edition](lan-edition/)** is a full remake of the same mall with new graphics and local-network multiplayer: sun shadows through the skylight, reflections, glowing neon, and everyone on your Wi-Fi sharing the same aliens and power-ups. It comes in an [AMD 395 version](lan-edition/downloads/Dead-Mall-Arena-AMD395.zip) and a [Raspberry Pi 500 version](lan-edition/downloads/Dead-Mall-Arena-Pi500.zip) that can play together.
+
+![LAN Edition on Ultra](lan-edition/screenshots/ultra-mezzanine.png)
+
+The original single-file version is below.
+
 ## What's in it
 
 - Single-player against AI bots, or multiplayer with friends using a party code, including a mode that needs no server at all
