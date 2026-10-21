@@ -9,6 +9,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 /* ------------------------------------------------------------------
    QUALITY PRESETS
@@ -215,7 +216,7 @@ function createPipeline(scene, camera){
 }
 
 window.DMA = {
-  THREE_NS: T, Q, PRESETS, gpuName, choice,
+  THREE_NS: T, Q, PRESETS, gpuName, choice, mergeGeometries,
   allMaterials, allPointLights,
   createPipeline,
   seedRandom(seed){ Math.random = mulberry32(seed); },
@@ -236,6 +237,6 @@ window.DMA = {
     ]);
   }catch(e){}
   for(const src of ['graphics.js', 'net.js', 'game.js']){
-    await new Promise((res, rej) => { const s = document.createElement('script'); s.src = src + '?v=' + (window.DMA_BUILD||'1'); s.onload = res; s.onerror = rej; document.body.appendChild(s); });
+    await new Promise((res, rej) => { const s = document.createElement('script'); s.src = src + '?v=' + (window.DMA_BUILD||'1'); s.onload = res; s.onerror = () => rej(new Error('could not load ' + src)); document.body.appendChild(s); });
   }
 })();

@@ -43,6 +43,10 @@ The first player in the mall becomes the **host**: their browser runs the alien 
 and power-ups for everyone. If they leave (or switch away from the game), the next player
 takes over automatically.
 
+**If the game won't start:** it shows the reason on screen (for example, 3D graphics turned off in
+the browser) instead of hanging on the loading screen. On a Pi, Chromium needs
+*Use graphics acceleration when available* switched on in its settings.
+
 **Windows firewall:** the first time, Windows may ask whether Python can use the network.
 Allow it on **Private networks**, or other computers can't join.
 
@@ -55,7 +59,7 @@ Pick on the start screen. Auto-detect chooses for you.
 | Ultra (AMD 395) | Radeon 8060S / any strong GPU | Sun shadows through the skylight, shadowed fluorescent lights, ambient occlusion, reflections, bloom, 4x anti-aliasing, film grain |
 | High | Gaming laptops and desktops | Ultra with smaller shadows and lighter AO |
 | Medium | Older or integrated graphics | Sun shadows, bloom and reflections, no AO |
-| Pi 500 | Raspberry Pi 5 / 500 | Faster lighting, nearest 6 lights only, 80% resolution, no post effects |
+| Pi 500 | Raspberry Pi 5 / 500 | Faster lighting, nearest 6 lights only, 80% resolution, no post effects, the still parts of the mall merged into big batches |
 
 If a machine can't keep up, the game quietly lowers its resolution a step at a time
 and raises it again when it can. Press **F** in game to see your frame rate.

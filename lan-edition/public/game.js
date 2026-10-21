@@ -5385,6 +5385,24 @@
   }
   animate();
   const loadingEl = document.getElementById('loading'); if(loadingEl) loadingEl.remove();
+  // batch everything that never moves (two snapshots a few seconds apart; anything that moved or
+  // is known to animate on its own or when you interact with it stays separate)
+  setTimeout(() => {
+    const first = DMAGfx.snapshotStatic(scene);
+    setTimeout(() => {
+      const keepSeparate = [];
+      bots.forEach(b => keepSeparate.push(b.group));
+      poolBalls.forEach(b => keepSeparate.push(b.mesh));
+      escalatorSteps.forEach(st => keepSeparate.push(st.tread, st.riser, st.edge));
+      pizzaRobots.forEach(r => keepSeparate.push(r.group));
+      animatronics.forEach(a => keepSeparate.push(a.group));
+      creepyFigures.forEach(f => keepSeparate.push(f.group));
+      keepSeparate.push(poolCue, sodaCanMesh, pizzaSliceMesh, jukeboxGlow, fortuneTellerFigure, movieScreen, ...crystalBalls, ...hellFires, ...billboardPlaques);
+      flickerLights.forEach(fl => keepSeparate.push(fl.fixture));
+      pickups.forEach(p => keepSeparate.push(p.group));
+      try{ DMAGfx.mergeStatic(scene, first, keepSeparate.filter(Boolean)); }catch(e){ console.warn('batching skipped', e); }
+    }, 3000);
+  }, 800);
   window.__dma = { scene, camera, renderer, pipeline, bots, remotePlayers, pickups, net, get myKills(){ return myKills; }, get localHealth(){ return localHealth; }, get deployed(){ return deployed; },
     teleport(x,z,yawV,pitchV,floor){ camera.position.set(x, 1.7+(floor||0)*FLOOR2_Y, z); currentFloor = floor||0; yaw = yawV||0; pitch = pitchV||0; },
     fire(){ fireCurrentWeapon(); }, damageLocalPlayer, equipWeapon, get weapon(){ return currentWeaponId; } };

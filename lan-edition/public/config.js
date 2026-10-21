@@ -2,4 +2,4 @@
 // The AMD 395 package ships with 'ultra', the Pi 500 package with 'pi'.
 // Players can always change it on the start screen.
 window.DMA_DEFAULT_QUALITY = 'high';
-window.DMA_BUILD = '2';
+window.DMA_BUILD = '3';

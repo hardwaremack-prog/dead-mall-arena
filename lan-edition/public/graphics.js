@@ -628,5 +628,76 @@
     if(now - lastMark > 1500){ lastMark = now; if(sceneRef) markShadows(sceneRef, true); }
   }
 
-  window.DMAGfx = { enhance, frame, flash, markShadows, Q };
+  /* ---------------- static batching ----------------
+     The mall is ~1,800 separate meshes. Everything that never moves gets merged into a few
+     big meshes per area and look, cutting draw calls from ~500 to well under 100 — the
+     single biggest win on the Raspberry Pi. The originals stay in the scene (hidden) so
+     bullets, line of sight and collisions work exactly as before. */
+  function shownChain(o){ for(let p=o; p; p=p.parent){ if(!p.visible) return false; } return true; }
+  function snapshotStatic(scene){
+    scene.updateMatrixWorld(true);
+    const m = new Map();
+    scene.traverse(o => { if(o.isMesh) m.set(o, { e: o.matrixWorld.elements.slice(), v: shownChain(o), mv: o.material && o.material.version }); });
+    return m;
+  }
+  function matSignature(mat){
+    // materials that look identical can share one draw call; glowing/animated ones keep their own
+    if(mat.emissive && mat.emissive.getHex() !== 0) return 'u:' + mat.uuid;
+    const c = mat.color ? mat.color.getHexString() : '';
+    return [mat.type, c, mat.map ? mat.map.uuid : '', mat.normalMap ? mat.normalMap.uuid : '', mat.roughnessMap ? mat.roughnessMap.uuid : '',
+      (mat.roughness||0).toFixed(2), (mat.metalness||0).toFixed(2), mat.side, mat.envMapIntensity !== undefined ? mat.envMapIntensity.toFixed(2) : '',
+      mat.polygonOffset ? 1 : 0, mat.vertexColors ? 1 : 0, mat.flatShading ? 1 : 0].join('|');
+  }
+  function mergeStatic(scene, first, excludeRoots){
+    const merge = DMA.mergeGeometries;
+    if(!merge) return 0;
+    const second = snapshotStatic(scene);
+    const excluded = new Set();
+    excludeRoots.forEach(r => { if(r) (r.isObject3D ? r : null) && r.traverse(o => excluded.add(o)); });
+    const CELL = Q.lambert ? 56 : 28, groups = new Map(), wp = new T.Vector3();
+    let before = 0;
+    second.forEach((s, o) => {
+      const f = first.get(o);
+      if(!f || !s.v || !f.v || excluded.has(o) || o.isInstancedMesh || o.isSkinnedMesh) return;
+      for(let i=0;i<16;i++){ if(Math.abs(f.e[i]-s.e[i]) > 1e-6) return; }
+      const mat = o.material, g = o.geometry;
+      if(!mat || Array.isArray(mat) || mat.isShaderMaterial || mat.transparent || mat.alphaTest > 0 || f.mv !== s.mv) return;
+      if(!g || !g.index || !g.attributes.position || !g.attributes.normal || !g.attributes.uv || g.morphAttributes.position) return;
+      if(o.customDepthMaterial || o.renderOrder !== 0 || o.userData.noMerge) return;
+      for(let p=o.parent; p; p=p.parent){ if(p.userData && (p.userData.isRemote || p.userData.isBot)) return; }
+      o.getWorldPosition(wp);
+      const key = matSignature(mat) + '#' + o.castShadow + o.receiveShadow + o.layers.mask + '#' + Math.floor(wp.x/CELL) + ',' + Math.floor(wp.z/CELL) + ',' + (wp.y > 5.4 ? 1 : 0);
+      if(!groups.has(key)) groups.set(key, { mat, list: [] });
+      groups.get(key).list.push(o);
+      before++;
+    });
+    let made = 0, merged = 0;
+    groups.forEach(({mat, list}) => {
+      if(list.length < 2) return;
+      const geos = list.map(o => {
+        const g = o.geometry.clone();
+        Object.keys(g.attributes).forEach(n => { if(n !== 'position' && n !== 'normal' && n !== 'uv') g.deleteAttribute(n); });
+        g.morphAttributes = {};
+        g.applyMatrix4(o.matrixWorld);
+        return g;
+      });
+      let mg = null;
+      try{ mg = merge(geos, false); }catch(e){ mg = null; }
+      geos.forEach(g => g.dispose());
+      if(!mg) return;
+      mg.computeBoundingSphere(); mg.computeBoundingBox();
+      const m = new T.Mesh(mg, mat);
+      m.castShadow = list[0].castShadow; m.receiveShadow = list[0].receiveShadow;
+      m.layers.mask = list[0].layers.mask;
+      m.matrixAutoUpdate = false; m.updateMatrix();
+      m.userData._sh = true; m.userData.merged = true;
+      scene.add(m);
+      list.forEach(o => { o.visible = false; o.userData.mergedAway = true; });
+      made++; merged += list.length;
+    });
+    console.log('[DMA] batched', merged, 'static meshes into', made);
+    return merged;
+  }
+
+  window.DMAGfx = { enhance, frame, flash, markShadows, Q, snapshotStatic, mergeStatic };
 })();

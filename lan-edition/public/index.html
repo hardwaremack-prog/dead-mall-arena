@@ -152,6 +152,29 @@
   #startPanel{max-height:96vh; overflow:auto;}
 </style>
 <script src="config.js"></script>
+<script>
+// show problems on the loading screen instead of hanging on "powering up the mall..."
+(function(){
+  function show(msg){
+    var el = document.getElementById('loading');
+    if(!el){ return; }
+    el.innerHTML = '<div style="max-width:560px;line-height:1.7;text-transform:none;letter-spacing:.5px"><b>DEAD MALL ARENA</b><br><br>' + msg + '</div>';
+  }
+  window.__dmaShowError = show;
+  if(location.protocol === 'file:'){
+    window.addEventListener('DOMContentLoaded', function(){ show('This page has to be opened through the game server, not as a file.<br><br>On a Raspberry Pi run <b>start-pi.sh</b>; on Windows run <b>start-windows.bat</b>. They open the right address for you (like http://localhost:8090).'); });
+    return;
+  }
+  var t = document.createElement('canvas');
+  var gl = null; try{ gl = t.getContext('webgl2') || t.getContext('webgl'); }catch(e){}
+  if(!gl){
+    window.addEventListener('DOMContentLoaded', function(){ show('This browser has 3D graphics (WebGL) turned off, so the game can\'t start.<br><br>In Chromium open <b>chrome://settings/system</b> and turn on <b>Use graphics acceleration when available</b>, then relaunch Chromium. On a Pi also check <b>chrome://gpu</b> says WebGL is "Hardware accelerated".'); });
+  }
+  window.addEventListener('error', function(e){ if(!window.__dma) show('Something went wrong while loading:<br><br><span style="color:#ff8a3d">' + String(e.message || e.error || 'unknown error').replace(/</g,'&lt;') + '</span><br><br>Take a photo of this screen and send it over.'); });
+  window.addEventListener('unhandledrejection', function(e){ if(!window.__dma) show('Something went wrong while loading:<br><br><span style="color:#ff8a3d">' + String((e.reason && e.reason.message) || e.reason).replace(/</g,'&lt;') + '</span><br><br>Take a photo of this screen and send it over.'); });
+  setTimeout(function(){ if(!window.__dma) show('Still loading after 45 seconds. The browser may be very slow or stuck.<br><br>Try refreshing (F5). If it keeps happening, take a photo of this screen.'); }, 45000);
+})();
+</script>
 <script type="importmap">
 { "imports": { "three": "./lib/three.module.min.js", "three/addons/": "./lib/addons/" } }
 </script>
